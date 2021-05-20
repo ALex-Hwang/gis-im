@@ -1,11 +1,10 @@
 import './App.css';
 import React, {Component} from 'react'
-import HomePage from './pages/homePage.js'
+import HomePage from './HomePage.js'
 
 function App() {
   return (
     <div className="App">
-    <h1>Place holder is here.</h1>
     <HomePage />
     </div>
   );
