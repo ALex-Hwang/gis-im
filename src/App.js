@@ -1,11 +1,16 @@
 import './App.css';
 import React, {Component} from 'react'
-import HomePage from './HomePage.js'
+import ChatRoom from './Components/ChatRoom'
+import {BrowserRouter, Route, Switch} from 'react-router-dom';
 
 function App() {
   return (
     <div className="App">
-    <HomePage />
+         <BrowserRouter>
+				<Switch>
+					<Route exact path = "/" component = {ChatRoom}/>
+				</Switch>
+          </BrowserRouter>
     </div>
   );
 }
