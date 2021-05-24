@@ -4,6 +4,7 @@ import { Button, Input, Layout, Menu, Breadcrumb } from 'antd'
 import React, { Component } from 'react'
 import TopBar from './TopBar.jsx'
 import Message from './Message'
+import moment from 'moment';
 import MessageList from './MessageList'
 import ConversationList from './ConversationList'
 import '../assets/css/Messenger.css'
@@ -16,6 +17,7 @@ import Toolbar from './Toolbar';
 import ToolbarButton from './ToolbarButton';
 import './ConversationList/ConversationList.css';
 import { invalid } from 'moment';
+import Compose from './Compose'
 
 
 
@@ -27,7 +29,7 @@ const { Header, Footer, Sider, Content } = Layout;
 class ChatRoom extends Component {
     constructor(props) {
         super(props);
-        this.state = {User: '', Receiver: '', Conversations: 0, Messages: ''}
+        this.state = {User: '', Receiver: '', Conversations: '', Messages: '', Test: {}}
     };
 
     
@@ -81,8 +83,9 @@ class ChatRoom extends Component {
         //发送消息
         var promise = im.sendMessage(textMessage);
 
-        promise.then(function(message) {
+        promise.then((message) => {
            console.log("Private message sent successfully.", message);
+           this.getMessages();
         }).catch(function(error) {
             console.log("Failed to send private message，code:" + error.code +",error"+error.content);
         });
@@ -149,22 +152,90 @@ class ChatRoom extends Component {
     
         //查询
         var promise = im.history(option);
+        let tt = this.state.Test;
     
         promise.then((result) => {
             //console.log("Query history successfully, result:\n " + JSON.stringify(result));
-            console.log(result)
+            //console.log(result.content)
+            this.setState({Messages: result.content});
+            tt[this.state.Receiver] = result.content;
+            this.setState({Test: tt});
+            console.log(tt)
         }).catch(function (error) {
             console.log("Failed to query private message, code:" + error.code + " content:" + error.content);
         });
     
     }
 
-    data = {
-        id: 1,
-        author: 'apple',
-        message: 'Hello world! This is a long message that will hopefully get wrapped by our message bubble component! We will see how well it works.',
-        timestamp: new Date().getTime()
-      }
+    // 這是一個測試函數
+    showMessages = () => {
+        console.log(this.state.Messages);
+        console.log(this.state.Test);
+    }
+
+    // 渲染消息
+    renderMessages = () => {
+        if (!this.state.Messages) return;
+        let i = 0;
+        let messageCount = this.state.Messages.length;
+        let tempMessages = [];
+        
+        
+        while (i < messageCount) {
+          let previous = this.state.Messages[i - 1];
+          let current = this.state.Messages[i];
+          let next = this.state.Messages[i + 1];
+          let isMine = current.senderId === this.state.User;
+          let currentMoment = moment(current.timestamp);
+          let prevBySameAuthor = false;
+          let nextBySameAuthor = false;
+          let startsSequence = true;
+          let endsSequence = true;
+          let showTimestamp = true;
+        
+          if (previous) {
+            let previousMoment = moment(previous.timestamp);
+            let previousDuration = moment.duration(currentMoment.diff(previousMoment));
+            prevBySameAuthor = previous.senderId === current.senderId;
+            
+            if (prevBySameAuthor && previousDuration.as('hours') < 1) {
+              startsSequence = false;
+            }
+        
+            if (previousDuration.as('hours') < 1) {
+              showTimestamp = false;
+            }
+          }
+      
+          if (next) {
+            let nextMoment = moment(next.timestamp);
+            let nextDuration = moment.duration(nextMoment.diff(currentMoment));
+            nextBySameAuthor = next.senderId === current.senderId;
+        
+            if (nextBySameAuthor && nextDuration.as('hours') < 1) {
+              endsSequence = false;
+            }
+          }
+      
+          tempMessages.push(
+            <Message
+              key={i}
+              isMine={isMine}
+              startsSequence={startsSequence}
+              endsSequence={endsSequence}
+              showTimestamp={showTimestamp}
+              data={current}
+            />
+          );
+        
+          // Proceed to the next message.
+          i += 1;
+        }
+    
+        return tempMessages;
+    }
+
+
     render() {
         return (
             <Layout>
@@ -206,10 +277,21 @@ class ChatRoom extends Component {
                         </div>
 
                         <div className="scrollable content">
-                        <MessageList />
+                            <div className="message-list">
+                        
+                                <Toolbar
+                                title={this.state.Receiver}
+                                rightItems={[
+                                <ToolbarButton key="info" icon="ion-ios-information-circle-outline" />,
+                                ]}
+                                />
+                            <div className="message-list-container">{this.renderMessages()}</div>
+                            </div>
+
 
                         <div style={{margin: "20px"}}>
                         <TextArea showCount maxLength={100} onPressEnter={this.onClick} />
+                        <Button type='primary' onClick={this.showMessages}>test button</Button>
                         </div>
                         </div>
                     </div>
