@@ -67,10 +67,26 @@ class ChatRoom extends Component {
     // to send the message
     // onClick on Button
     onClick = (value) => {
+        const content = value.target.value
+        value.target.value = ""
+
+        let Mess= this.state.Messages;
+        let newMessage = {
+            timestamp: Date.now(),
+            senderId: this.state.User,
+            type: 'text',
+            payload: {text: content}
+        }
+        if (!Mess) Mess = [];
+        Mess.push(newMessage);
+        this.setState({Messages: Mess});
+
+
+
 
         //创建消息, 内容最长不超过3K，可以发送字符串，对象和json格式字符串
         let textMessage = im.createTextMessage({
-            text: value.target.value, //消息内容
+            text: content, //消息内容
             to : {
                 type : GoEasyIM.SCENE.PRIVATE,   //私聊还是群聊，群聊为GoEasyIM.SCENE.GROUP
                 id : this.state.Receiver,
@@ -79,13 +95,12 @@ class ChatRoom extends Component {
         });
 
 
-        value.target.value = ""
         //发送消息
         var promise = im.sendMessage(textMessage);
 
         promise.then((message) => {
            console.log("Private message sent successfully.", message);
-           this.getMessages();
+           //this.getMessages();
         }).catch(function(error) {
             console.log("Failed to send private message，code:" + error.code +",error"+error.content);
         });
@@ -96,13 +111,25 @@ class ChatRoom extends Component {
     chooseConversation = (e) => {
         this.setState({Receiver: e.currentTarget.id});
         this.getMessages();
+        // 標記為已讀
+        var promise = im.markPrivateMessageAsRead(e.currentTarget.id);
+        promise.then(function(result) {
+            //会话列表结果
+            // {
+            //     code: 200,
+            //     content: 'OK'
+            // };
+        }).catch(function(error) {
+            console.log("Failed to mark as read, code:" + error.code + " content:" + error.content);
+        });
+
     };
 
     // 获取对话列表
     getConversations = () => {
         var promise = im.latestConversations();
         promise.then((result) => {
-            console.log(result)
+            //console.log(result)
             this.setState({Conversations: result.content.conversations});
 
         }).catch(function(error) {
@@ -113,6 +140,25 @@ class ChatRoom extends Component {
     // 持续监听对话列表
     watchConversations = () => {
         var onConversationsUpdated = (conversations) => { 
+            let Mess = this.state.Messages;
+            console.log(conversations);
+            let count = conversations.conversations.length;
+            let i = 0;
+            while (i < count) {
+                console.log(conversations.conversations[i].userId)
+                console.log(this.state.Receiver)
+                if (conversations.conversations[i].userId===this.state.Receiver && conversations.conversations[i].unread!=0) {
+                    let newMessage = {
+                        timestamp: conversations.conversations[i].lastMessage.timestamp,
+                        senderId: this.state.Receiver,
+                        type: 'text',
+                        payload: {text: conversations.conversations[i].lastMessage.payload.text}
+                    }
+                    Mess.push(newMessage);
+                }
+                i += 1;
+            }
+            this.setState({Messages: Mess})
             this.getConversations(); 
         };
 
@@ -142,8 +188,13 @@ class ChatRoom extends Component {
         return temp;
     }
 
+    // not going to use for now
     // 獲取歷史紀錄
     getMessages = () => {
+
+
+
+
         var option = {
             friendId: this.state.Receiver,  //对方userId
             lastTimestamp: Date.now(), //查询发送时间小于（不包含）该时间的历史消息，可用于分页和分批拉取聊天记录，默认为当前时间
@@ -152,15 +203,11 @@ class ChatRoom extends Component {
     
         //查询
         var promise = im.history(option);
-        let tt = this.state.Test;
     
         promise.then((result) => {
             //console.log("Query history successfully, result:\n " + JSON.stringify(result));
             //console.log(result.content)
             this.setState({Messages: result.content});
-            tt[this.state.Receiver] = result.content;
-            this.setState({Test: tt});
-            console.log(tt)
         }).catch(function (error) {
             console.log("Failed to query private message, code:" + error.code + " content:" + error.content);
         });
@@ -169,7 +216,7 @@ class ChatRoom extends Component {
 
     // 這是一個測試函數
     showMessages = () => {
-        console.log(this.state.Messages);
+        //console.log(this.state.Messages);
         console.log(this.state.Test);
     }
 
@@ -291,7 +338,6 @@ class ChatRoom extends Component {
 
                         <div style={{margin: "20px"}}>
                         <TextArea showCount maxLength={100} onPressEnter={this.onClick} />
-                        <Button type='primary' onClick={this.showMessages}>test button</Button>
                         </div>
                         </div>
                     </div>
