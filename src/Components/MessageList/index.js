@@ -11,6 +11,8 @@ const MY_USER_ID = 'apple';
 
 export default function MessageList(props) {
   const [messages, setMessages] = useState([])
+  // props: loginID, ConversationID, Messages
+  const [loginID, ]
 
   useEffect(() => {
     getMessages();

@@ -12,6 +12,10 @@ import { ChatItem } from 'react-chat-elements'
 import 'react-chat-elements/dist/main.css';
 // MessageBox component
 import { MessageBox } from 'react-chat-elements';
+import Toolbar from './Toolbar';
+import ToolbarButton from './ToolbarButton';
+import './ConversationList/ConversationList.css';
+import { invalid } from 'moment';
 
 
 
@@ -23,12 +27,9 @@ const { Header, Footer, Sider, Content } = Layout;
 class ChatRoom extends Component {
     constructor(props) {
         super(props);
-        this.state = {User: '', Receiver: '', Messages: []}
+        this.state = {User: '', Receiver: '', Conversations: 0, Messages: ''}
     };
 
-    onSearch = (value) => {
-        console.log(value);
-    };
     
     login = (value) =>  {
         // construct the user info
@@ -45,6 +46,8 @@ class ChatRoom extends Component {
         }).catch(function(error) {
             console.log("Failed to connect GoEasy, code:"+error.code+ ",error:"+error.content);
         });
+        this.getConversations();
+        this.watchConversations();
     };
 
     // the button to send
@@ -62,9 +65,6 @@ class ChatRoom extends Component {
     // to send the message
     // onClick on Button
     onClick = (value) => {
-        console.log("user: "+this.state.User)
-        console.log("Receiver: "+this.state.Receiver)
-        console.log("Message: "+this.state.Message)
 
         //创建消息, 内容最长不超过3K，可以发送字符串，对象和json格式字符串
         let textMessage = im.createTextMessage({
@@ -76,6 +76,8 @@ class ChatRoom extends Component {
             }
         });
 
+
+        value.target.value = ""
         //发送消息
         var promise = im.sendMessage(textMessage);
 
@@ -84,30 +86,85 @@ class ChatRoom extends Component {
         }).catch(function(error) {
             console.log("Failed to send private message，code:" + error.code +",error"+error.content);
         });
-        value.target.value = ""
 
     }
 
+    // 選擇聊天對象
+    chooseConversation = (e) => {
+        this.setState({Receiver: e.currentTarget.id});
+        this.getMessages();
+    };
+
+    // 获取对话列表
     getConversations = () => {
         var promise = im.latestConversations();
-        promise.then(function(result) {
+        promise.then((result) => {
             console.log(result)
+            this.setState({Conversations: result.content.conversations});
+
         }).catch(function(error) {
             console.log("Failed to get the latest conversations, code:" + error.code + " content:" + error.content);
         });
-    
     }
 
+    // 持续监听对话列表
     watchConversations = () => {
-        var onConversationsUpdated = function(conversations) { 
-            console.log(conversations)
+        var onConversationsUpdated = (conversations) => { 
+            this.getConversations(); 
         };
 
     //监听会话列表更新
         im.on(GoEasyIM.EVENT.CONVERSATIONS_UPDATED, onConversationsUpdated);
     }
 
+    // 渲染对话列表
+    renderConversations = () => {
+        let i = 0;
+        let temp = [];
+        let count = this.state.Conversations.length
+        while (i < count) {
+            temp.push(
+                <div id={this.state.Conversations[i].userId} onClick={this.chooseConversation}>
+                <ChatItem 
+                avatar="https://www.logosvgpng.com/wp-content/uploads/2021/05/proginov-logo-vector.png" 
+                title={this.state.Conversations[i].userId} 
+                subtitle={this.state.Conversations[i].lastMessage.payload.text}
+                unread={this.state.Conversations[i].unread}
+                date={this.state.Conversations[i].lastMessage.timestamp}
+                />
+                </div>
+            )
+            i+=1;
+        }
+        return temp;
+    }
+
+    // 獲取歷史紀錄
+    getMessages = () => {
+        var option = {
+            friendId: this.state.Receiver,  //对方userId
+            lastTimestamp: Date.now(), //查询发送时间小于（不包含）该时间的历史消息，可用于分页和分批拉取聊天记录，默认为当前时间
+            limit: 10 //可选项，返回的消息条数，默认为10条，最多30条
+        }
     
+        //查询
+        var promise = im.history(option);
+    
+        promise.then((result) => {
+            //console.log("Query history successfully, result:\n " + JSON.stringify(result));
+            console.log(result)
+        }).catch(function (error) {
+            console.log("Failed to query private message, code:" + error.code + " content:" + error.content);
+        });
+    
+    }
+
+    data = {
+        id: 1,
+        author: 'apple',
+        message: 'Hello world! This is a long message that will hopefully get wrapped by our message bubble component! We will see how well it works.',
+        timestamp: new Date().getTime()
+      }
     render() {
         return (
             <Layout>
@@ -132,50 +189,25 @@ class ChatRoom extends Component {
                     </div>
 
 
-                    <Button type="primary" onClick={this.getConversations}>getConversations</Button>
-                    <Button type="primary" onClick={this.watchConversations}>watchConversations</Button>
-
                     <div className="messenger">
                         <div className="scrollable sidebar">
-                        <ChatItem
-                        avatar={'https://facebook.github.io/react/img/logo.svg'}
-                        alt={'Reactjs'}
-                        title={'Facebook'}
-                        subtitle={'What are you doing?'}
-                        date={new Date()}
-                        unread={1} />
-                        <ChatItem
-                        avatar={'https://facebook.github.io/react/img/logo.svg'}
-                        alt={'Reactjs'}
-                        title={'Facebook'}
-                        subtitle={'What are you doing?'}
-                        date={new Date()}
-                        unread={0} />
-                        <ChatItem
-                        avatar={'https://facebook.github.io/react/img/logo.svg'}
-                        alt={'Reactjs'}
-                        title={'Facebook'}
-                        subtitle={'What are you doing?'}
-                        date={new Date()}
-                        unread={0} />
-                        <ChatItem
-                        avatar={'https://facebook.github.io/react/img/logo.svg'}
-                        alt={'Reactjs'}
-                        title={'Facebook'}
-                        subtitle={'What are you doing?'}
-                        date={new Date()}
-                        unread={0} />
-                        <ChatItem
-                        avatar={'https://facebook.github.io/react/img/logo.svg'}
-                        alt={'Reactjs'}
-                        title={'Facebook'}
-                        subtitle={'What are you doing?'}
-                        date={new Date()}
-                        unread={0} />
+                        <Toolbar
+                        title="消息列表"
+                        leftItems={[
+                          <ToolbarButton key="cog" icon="ion-ios-cog" />
+                        ]}
+                        rightItems={[
+                          <ToolbarButton key="add" icon="ion-ios-add-circle-outline" />
+                        ]}
+                        />
+
+
+                        {this.renderConversations()}
                         </div>
 
                         <div className="scrollable content">
                         <MessageList />
+
                         <div style={{margin: "20px"}}>
                         <TextArea showCount maxLength={100} onPressEnter={this.onClick} />
                         </div>
