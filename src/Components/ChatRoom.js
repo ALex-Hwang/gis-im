@@ -18,6 +18,7 @@ import ToolbarButton from './ToolbarButton';
 import './ConversationList/ConversationList.css';
 import { invalid } from 'moment';
 import Compose from './Compose'
+import axios from 'axios'
 
 
 
@@ -82,28 +83,40 @@ class ChatRoom extends Component {
         this.setState({Messages: Mess});
 
 
-
-
-        //创建消息, 内容最长不超过3K，可以发送字符串，对象和json格式字符串
-        let textMessage = im.createTextMessage({
-            text: content, //消息内容
-            to : {
-                type : GoEasyIM.SCENE.PRIVATE,   //私聊还是群聊，群聊为GoEasyIM.SCENE.GROUP
-                id : this.state.Receiver,
-                data:'{"avatar":"/www/xxx.png","nickname":"shit"}' //好友扩展数据, 任意格式的字符串或者对象，用于更新会话列表conversation.data
+        if (this.state.Receiver==="问诊机器人") {
+            const url = "http://10.112.196.28:5000"
+            const data = {
+                sender: this.state.User,
+                question: content
             }
-        });
+            axios.post(url, data).then((res) => {
+                console.log('robot sent succeeded.')
+            })
+        } else {
+            //创建消息, 内容最长不超过3K，可以发送字符串，对象和json格式字符串
+            let textMessage = im.createTextMessage({
+                text: content, //消息内容
+                to : {
+                    type : GoEasyIM.SCENE.PRIVATE,   //私聊还是群聊，群聊为GoEasyIM.SCENE.GROUP
+                    id : this.state.Receiver,
+                    data:'{"avatar":"/www/xxx.png","nickname":"shit"}' //好友扩展数据, 任意格式的字符串或者对象，用于更新会话列表conversation.data
+                }
+            });
 
 
-        //发送消息
-        var promise = im.sendMessage(textMessage);
+            //发送消息
+            var promise = im.sendMessage(textMessage);
 
-        promise.then((message) => {
-           console.log("Private message sent successfully.", message);
-           //this.getMessages();
-        }).catch(function(error) {
-            console.log("Failed to send private message，code:" + error.code +",error"+error.content);
-        });
+            promise.then((message) => {
+               console.log("Private message sent successfully.", message);
+               //this.getMessages();
+            }).catch(function(error) {
+                console.log("Failed to send private message，code:" + error.code +",error"+error.content);
+            });
+
+            }
+
+
 
     }
 
