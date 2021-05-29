@@ -159,6 +159,7 @@ class ChatRoom extends Component {
             //     content: 'OK'
             // };
         }).then( () => {
+            // get the messages after the receiver is chosen
             this.getMessages();
         }
         ).catch(function(error) {
