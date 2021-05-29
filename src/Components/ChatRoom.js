@@ -1,6 +1,6 @@
 import im from '../config.js'
 import GoEasyIM from 'goeasy-im';
-import { Button, Input, Layout, Menu, Breadcrumb } from 'antd'
+import { Button, Input, Layout, Menu, Breadcrumb, Dropdown, message } from 'antd'
 import React, { Component } from 'react'
 import TopBar from './TopBar.jsx'
 import Message from './Message'
@@ -30,8 +30,31 @@ const { Header, Footer, Sider, Content } = Layout;
 class ChatRoom extends Component {
     constructor(props) {
         super(props);
-        this.state = {User: '', Receiver: '', Conversations: '', Messages: '', Test: {}}
+        this.state = {User: '', Receiver: '', Conversations: '', Messages: '', Message: ''}
     };
+
+    // choose the receiver using the menu
+    chooseReceiver = ({key}) => {
+        switch(key) {
+            case "1":
+                this.setState({Receiver: "专业医师"})
+                break;
+            case "2":
+                this.setState({Receiver: "在线客服"})
+                break;
+            case "3":
+                this.setState({Receiver: "问诊机器人"})
+        }
+    }
+    // the menu for choosing the doctor/bot
+    menu = (
+    <Menu onClick={this.chooseReceiver}>
+        <Menu.Item key="1">专业医师</Menu.Item>
+        <Menu.Item key="2">在线客服</Menu.Item>
+        <Menu.Item key="3">问诊机器人</Menu.Item>
+    </Menu>
+    )
+
 
     
     login = (value) =>  {
@@ -67,9 +90,10 @@ class ChatRoom extends Component {
 
     // to send the message
     // onClick on Button
-    onClick = (value) => {
-        const content = value.target.value
-        value.target.value = ""
+    sendMessage = (value) => {
+        value.preventDefault()
+        var content = this.state.Message
+        this.setState({Message: ''})
 
         let Mess= this.state.Messages;
         let newMessage = {
@@ -83,6 +107,7 @@ class ChatRoom extends Component {
         this.setState({Messages: Mess});
 
 
+
         if (this.state.Receiver==="问诊机器人") {
             const url = "http://10.112.196.28:5000"
             const data = {
@@ -92,29 +117,29 @@ class ChatRoom extends Component {
             axios.post(url, data).then((res) => {
                 console.log('robot sent succeeded.')
             })
-        } else {
-            //创建消息, 内容最长不超过3K，可以发送字符串，对象和json格式字符串
-            let textMessage = im.createTextMessage({
-                text: content, //消息内容
-                to : {
-                    type : GoEasyIM.SCENE.PRIVATE,   //私聊还是群聊，群聊为GoEasyIM.SCENE.GROUP
-                    id : this.state.Receiver,
-                    data:'{"avatar":"/www/xxx.png","nickname":"shit"}' //好友扩展数据, 任意格式的字符串或者对象，用于更新会话列表conversation.data
-                }
-            });
+        } 
+        //创建消息, 内容最长不超过3K，可以发送字符串，对象和json格式字符串
 
-
-            //发送消息
-            var promise = im.sendMessage(textMessage);
-
-            promise.then((message) => {
-               console.log("Private message sent successfully.", message);
-               //this.getMessages();
-            }).catch(function(error) {
-                console.log("Failed to send private message，code:" + error.code +",error"+error.content);
-            });
-
+        let textMessage = im.createTextMessage({
+            text: content, //消息内容
+            to : {
+                type : GoEasyIM.SCENE.PRIVATE,   //私聊还是群聊，群聊为GoEasyIM.SCENE.GROUP
+                id : this.state.Receiver,
+                data:'{"avatar":"/www/xxx.png","nickname":"shit"}' //好友扩展数据, 任意格式的字符串或者对象，用于更新会话列表conversation.data
             }
+        });
+
+
+        //发送消息
+        var promise = im.sendMessage(textMessage);
+
+        promise.then((message) => {
+           console.log("Private message sent successfully.", message);
+           //this.getMessages();
+        }).catch(function(error) {
+            console.log("Failed to send private message，code:" + error.code +",error"+error.content);
+        });
+
 
 
 
@@ -158,8 +183,6 @@ class ChatRoom extends Component {
             let count = conversations.conversations.length;
             let i = 0;
             while (i < count) {
-                console.log(conversations.conversations[i].userId)
-                console.log(this.state.Receiver)
                 if (conversations.conversations[i].userId===this.state.Receiver && conversations.conversations[i].unread!=0) {
                     let newMessage = {
                         timestamp: conversations.conversations[i].lastMessage.timestamp,
@@ -207,7 +230,6 @@ class ChatRoom extends Component {
 
 
 
-
         var option = {
             friendId: this.state.Receiver,  //对方userId
             lastTimestamp: Date.now(), //查询发送时间小于（不包含）该时间的历史消息，可用于分页和分批拉取聊天记录，默认为当前时间
@@ -221,17 +243,12 @@ class ChatRoom extends Component {
             //console.log("Query history successfully, result:\n " + JSON.stringify(result));
             //console.log(result.content)
             this.setState({Messages: result.content});
-        }).catch(function (error) {
+        }).catch((error) => {
             console.log("Failed to query private message, code:" + error.code + " content:" + error.content);
         });
     
     }
 
-    // 這是一個測試函數
-    showMessages = () => {
-        //console.log(this.state.Messages);
-        console.log(this.state.Test);
-    }
 
     // 渲染消息
     renderMessages = () => {
@@ -310,15 +327,6 @@ class ChatRoom extends Component {
                     />
                     </div>
 
-                    <div style={{margin: "20px"}}>
-                    <Search
-                    placeholder="choose who you wanna send to"
-                    enterButton="Confirm"
-                    size="large"
-                    onSearch={this.setSender}
-                    />
-                    </div>
-
 
                     <div className="messenger">
                         <div className="scrollable sidebar">
@@ -328,7 +336,11 @@ class ChatRoom extends Component {
                           <ToolbarButton key="cog" icon="ion-ios-cog" />
                         ]}
                         rightItems={[
-                          <ToolbarButton key="add" icon="ion-ios-add-circle-outline" />
+                          <Dropdown overlay={this.menu}>
+                          <a className="ant-dropdown-link" onClick={e => e.preventDefault()}>
+                          <ToolbarButton key="add" icon="ion-ios-add-circle-outline" />                               
+                          </a>
+                        </Dropdown>
                         ]}
                         />
 
@@ -350,7 +362,7 @@ class ChatRoom extends Component {
 
 
                         <div style={{margin: "20px"}}>
-                        <TextArea showCount maxLength={100} onPressEnter={this.onClick} />
+                        <TextArea showCount maxLength={100} onPressEnter={this.sendMessage} onChange={this.onChange} value={this.state.Message}/>
                         </div>
                         </div>
                     </div>
