@@ -30,7 +30,7 @@ const { Header, Footer, Sider, Content } = Layout;
 class ChatRoom extends Component {
     constructor(props) {
         super(props);
-        this.state = {User: '', Receiver: '', Conversations: '', Messages: '', Message: ''}
+        this.state = {User: '', Receiver: '', Conversations: '', Messages: '', Message: '', allMessages: ''}
     };
 
     // choose the receiver using the menu
@@ -148,8 +148,9 @@ class ChatRoom extends Component {
     // 選擇聊天對象
     chooseConversation = (e) => {
         this.setState({Receiver: e.currentTarget.id});
-        this.getMessages();
         // 標記為已讀
+
+        //this.getMessages();
         var promise = im.markPrivateMessageAsRead(e.currentTarget.id);
         promise.then(function(result) {
             //会话列表结果
@@ -157,7 +158,10 @@ class ChatRoom extends Component {
             //     code: 200,
             //     content: 'OK'
             // };
-        }).catch(function(error) {
+        }).then( () => {
+            this.getMessages();
+        }
+        ).catch(function(error) {
             console.log("Failed to mark as read, code:" + error.code + " content:" + error.content);
         });
 
@@ -222,6 +226,12 @@ class ChatRoom extends Component {
             i+=1;
         }
         return temp;
+    }
+
+
+    // get all the messages in the first place 
+    getAllMessages = () => {
+
     }
 
     // not going to use for now
