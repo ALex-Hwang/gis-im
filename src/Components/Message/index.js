@@ -12,6 +12,15 @@ export default function Message(props) {
     } = props;
 
     const friendlyTimestamp = moment(data.timestamp).format('LLLL');
+    var payload
+    if (data.type==='image') {
+        payload = <img src={data.payload.url} width={600} height={600/data.payload.width*data.payload.height} />;
+    } else if (data.type==='text') {
+        payload = data.payload.text;
+    } else {
+        payload = data.payload.text;
+    }
+    
     return (
       <div className={[
         'message',
@@ -28,7 +37,7 @@ export default function Message(props) {
 
         <div className="bubble-container">
           <div className="bubble" title={friendlyTimestamp}>
-            { data.payload.text }
+            { payload }
           </div>
         </div>
       </div>
