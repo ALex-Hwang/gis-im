@@ -62,3 +62,7 @@
   border-top-right-radius: 2px;
   border-bottom-right-radius: 2px;
 }
+
+img {
+  border-radius: 20px;
+}
