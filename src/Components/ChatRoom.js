@@ -153,7 +153,6 @@ class ChatRoom extends Component {
 
 
 
-
             let message = im.createImageMessage({
                 file: image, //H5获得的图片file对象，Uniapp和小程序调用chooseImage，success时得到的res对象
                 to : {
@@ -468,7 +467,12 @@ class ChatRoom extends Component {
                                 <Toolbar
                                 title={this.state.Receiver}
                                 rightItems={[
-                                <ToolbarButton key="info" icon="ion-ios-information-circle-outline" />,
+                                <div class='image-upload'>
+                                    <label for="file-input">
+                                        <i className="toolbar-button ion-ios-image" />
+                                    </label>
+                                    <input id="file-input" type="file" onChange={this.onFileChange} />
+                                </div>
                                 ]}
                                 />
                             <div className="message-list-container">{this.renderMessages()}</div>
@@ -477,12 +481,6 @@ class ChatRoom extends Component {
 
                         <div style={{margin: "20px"}}>
                         <TextArea showCount maxLength={100} onPressEnter={this.sendMessage} onChange={this.onChange} value={this.state.Message}/>
-                        <div class='image-upload'>
-                            <label for="file-input">
-                                <i className="toolbar-button ion-ios-image" />
-                            </label>
-                            <input id="file-input" type="file" onChange={this.onFileChange} />
-                        </div>
                         </div>
                         </div>
                     </div>
