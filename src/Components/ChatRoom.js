@@ -19,6 +19,9 @@ import './ConversationList/ConversationList.css';
 import { invalid } from 'moment';
 import Compose from './Compose'
 import axios from 'axios'
+import Resizer from "react-image-file-resizer";
+
+
 import './ToolbarButton/ToolbarButton.css';
 import './ChatRoom.css'
 
@@ -39,9 +42,30 @@ class ChatRoom extends Component {
     // on file select (from the pop up window)
     onFileChange = (e) => {
         this.setState({File: e.target.files[0]})
-        this.setState({URL: URL.createObjectURL(e.target.files[0])})
+        //this.setState({URL: URL.createObjectURL(e.target.files[0])})
         console.log(e.target.files[0])
         message.info('上传成功')
+
+
+        // try to get the width and height of the img
+        try {
+            Resizer.imageFileResizer(
+                e.target.files[0],
+                600,
+                800,
+                "PNG",
+                100,
+                0,
+                (url) => {
+                    //console.log("The new URL is: "+url)
+                    // update the new URL
+                    this.setState({URL: url})
+                }
+
+            )
+        } catch (error) {
+            console.log("The error is: "+error)
+        }
     }
 
 
@@ -114,6 +138,21 @@ class ChatRoom extends Component {
             // construct the imageMessage
             let image = this.state.File
             this.setState({File: null})
+
+            let Mess= this.state.Messages
+            var newMessage = {
+                timestamp: Date.now(),
+                senderId: this.state.User,
+                type: "image",
+                payload: {url: this.state.URL}
+            }
+            if (!Mess) Mess=[]
+            Mess.push(newMessage)
+            this.setState({Messages: Mess})
+
+
+
+
 
             let message = im.createImageMessage({
                 file: image, //H5获得的图片file对象，Uniapp和小程序调用chooseImage，success时得到的res对象
@@ -444,7 +483,6 @@ class ChatRoom extends Component {
                             </label>
                             <input id="file-input" type="file" onChange={this.onFileChange} />
                         </div>
-                        <img src={this.state.URL} />
                         </div>
                         </div>
                     </div>
