@@ -1,6 +1,6 @@
 import im from '../config.js'
 import GoEasyIM from 'goeasy-im';
-import { Button, Input, Layout, Menu, Breadcrumb, Dropdown, message } from 'antd'
+import { Button, Input, Layout, Menu, Breadcrumb, Dropdown, message, Space } from 'antd'
 import React, { Component } from 'react'
 import TopBar from './TopBar.jsx'
 import Message from './Message'
@@ -20,6 +20,7 @@ import { invalid } from 'moment';
 import Compose from './Compose'
 import axios from 'axios'
 import Resizer from "react-image-file-resizer";
+import ReactAudioPlayer from 'react-audio-player'
 
 
 import './ToolbarButton/ToolbarButton.css';
@@ -35,16 +36,22 @@ const { Header, Footer, Sider, Content } = Layout;
 class ChatRoom extends Component {
     constructor(props) {
         super(props);
-        this.state = {User: '', Receiver: '', Conversations: '', Messages: '', Message: '', allMessages: '', File: null, URL: null }
+        this.state = {User: '', Receiver: '', Conversations: '', Messages: '', Message: '', allMessages: '', File: null, URL: null, Type: null }
     };
 
 
     // on file select (from the pop up window)
-    onFileChange = (e) => {
-        this.setState({File: e.target.files[0]})
+    onImageChange = (e) => {
         //this.setState({URL: URL.createObjectURL(e.target.files[0])})
-        console.log(e.target.files[0])
-        message.info('上传成功')
+        console.log(e.target.files[0].type)
+        if (e.target.files[0].type!=='image/png'&&e.target.files[0].type!=='image/jpg') {
+            message.info('请上传图片格式的文件')
+            return;
+        }
+        this.setState({File: e.target.files[0]})
+        this.setState({Type: 'image'})
+        
+        message.info('图片上传成功')
 
 
         // try to get the width and height of the img
@@ -66,6 +73,20 @@ class ChatRoom extends Component {
         } catch (error) {
             console.log("The error is: "+error)
         }
+    }
+
+
+    onAudioChange = (e) => {
+        if (e.target.files[0].type!=='audio/mpeg') {
+            message.info("请上传音频格式的文件")
+            return ;
+        }
+        this.setState({File: e.target.files[0]})
+        this.setState({Type: 'audio'})
+        this.setState({URL: URL.createObjectURL(e.target.files[0])})
+        
+        message.info('上传成功')
+
     }
 
 
@@ -135,15 +156,15 @@ class ChatRoom extends Component {
             message.info('请选择发送对象')
 
         } else if (this.state.File){
-            // construct the imageMessage
-            let image = this.state.File
+            // construct the Message
+            let file = this.state.File
             this.setState({File: null})
 
             let Mess= this.state.Messages
             var newMessage = {
                 timestamp: Date.now(),
                 senderId: this.state.User,
-                type: "image",
+                type: this.state.Type,
                 payload: {url: this.state.URL}
             }
             if (!Mess) Mess=[]
@@ -151,17 +172,29 @@ class ChatRoom extends Component {
             this.setState({Messages: Mess})
 
 
+            var message
+            if (this.state.Type==='image') {
+                message = im.createImageMessage({
+                    file: file, //H5获得的图片file对象，Uniapp和小程序调用chooseImage，success时得到的res对象
+                    to : {
+                        type : GoEasyIM.SCENE.PRIVATE,   //私聊还是群聊，群聊为GoEasy.IM_SCENE.GROUP
+                        id : this.state.Receiver,
+                        data:{"avatar":"/www/xxx.png","nickname":"Neo"} //好友扩展数据, 任意格式的字符串或者对象，用于更新会话列表conversation.data
+                    },
+                    onProgress: (event) => { console.log('file uploading:', event) } //获取上传进度
+                });
+            } else { // audio file
+                message = im.createAudioMessage({
+                    file: file, //H5获得的图片file对象，Uniapp和小程序调用chooseImage，success时得到的res对象
+                    to : {
+                        type : GoEasyIM.SCENE.PRIVATE,   //私聊还是群聊，群聊为GoEasy.IM_SCENE.GROUP
+                        id : this.state.Receiver,
+                        data:{"avatar":"/www/xxx.png","nickname":"Neo"} //好友扩展数据, 任意格式的字符串或者对象，用于更新会话列表conversation.data
+                    },
+                    onProgress: (event) => { console.log('file uploading:', event) } //获取上传进度
+                });
+            }
 
-
-            let message = im.createImageMessage({
-                file: image, //H5获得的图片file对象，Uniapp和小程序调用chooseImage，success时得到的res对象
-                to : {
-                    type : GoEasyIM.SCENE.PRIVATE,   //私聊还是群聊，群聊为GoEasy.IM_SCENE.GROUP
-                    id : this.state.Receiver,
-                    data:{"avatar":"/www/xxx.png","nickname":"Neo"} //好友扩展数据, 任意格式的字符串或者对象，用于更新会话列表conversation.data
-                },
-                onProgress: (event) => { console.log('file uploading:', event) } //获取上传进度
-            });
             
             console.log('upload is OK')
             // send the message
@@ -269,12 +302,12 @@ class ChatRoom extends Component {
             let i = 0;
             while (i < count) {
                 if (conversations.conversations[i].userId===this.state.Receiver && conversations.conversations[i].unread!==0) {
-                    if (conversations.conversations[i].lastMessage.type==="image") {
-                        message.info('received an image...')
+                    if (conversations.conversations[i].lastMessage.type!=="text") {
+                        message.info('received an file...')
                         let newMessage = {
                            timestamp: conversations.conversations[i].lastMessage.timestamp,
                            senderId: this.state.Receiver,
-                           type: 'image',
+                           type: conversations.conversations[i].lastMessage.type,
                            payload: {url: conversations.conversations[i].lastMessage.payload.url}
                        }
                        Mess.push(newMessage);
@@ -309,8 +342,8 @@ class ChatRoom extends Component {
         while (i < count) {
             if (this.state.Conversations[i].lastMessage.type==='image') {
                 payload = "[图片]"
-            } else if (this.state.Conversations[i].lastMessage.type==='text') {
-                payload = this.state.Conversations[i].lastMessage.payload.text
+            } else if (this.state.Conversations[i].lastMessage.type==='audio') {
+                payload = "[音频]"
             } else {
                 payload = this.state.Conversations[i].lastMessage.payload.text
             }
@@ -467,12 +500,22 @@ class ChatRoom extends Component {
                                 <Toolbar
                                 title={this.state.Receiver}
                                 rightItems={[
+                                <Space>
                                 <div class='image-upload'>
-                                    <label for="file-input">
+                                    <label for="image-input">
                                         <i className="toolbar-button ion-ios-image" />
                                     </label>
-                                    <input id="file-input" type="file" onChange={this.onFileChange} />
+                                    <input id="image-input" type="file" onChange={this.onImageChange} />
                                 </div>
+                                <div class='audio-upload'>
+                                    <label for="audio-input">
+                                        <i className="toolbar-button ion-ios-microphone" />
+                                    </label>
+                                    <input id="audio-input" type="file" onChange={this.onAudioChange} />
+                                </div>
+
+                                </Space>
+
                                 ]}
                                 />
                             <div className="message-list-container">{this.renderMessages()}</div>

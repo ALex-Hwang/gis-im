@@ -1,5 +1,6 @@
 import React from 'react';
 import moment from 'moment';
+import ReactAudioPlayer from 'react-audio-player'
 import './Message.css';
 
 export default function Message(props) {
@@ -15,8 +16,8 @@ export default function Message(props) {
     var payload
     if (data.type==='image') {
         payload = <img src={data.payload.url} width={600} height={600/data.payload.width*data.payload.height} />;
-    } else if (data.type==='text') {
-        payload = data.payload.text;
+    } else if (data.type==='audio') {
+        payload = <ReactAudioPlayer src={data.payload.url} controls />
     } else {
         payload = data.payload.text;
     }
