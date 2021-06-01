@@ -26,21 +26,21 @@ class TopMenu extends React.Component{
     render() {
         return(
             <div className="TopMenu">
-                <Menu onClick={this.handleClick} selectedKeys={[this.state.current]} mode="horizontal">
-                    <MenuItem key = "首页" icon={<HomeOutlined/>}>
+                <Menu onClick={this.handleClick} selectedKeys={[window.location.pathname]}  mode="horizontal">
+                    <MenuItem key = "/" icon={<HomeOutlined/>}>
                         <Link to = "/"> 首页 </Link>
                     </MenuItem>
-                    <MenuItem key = "模块1" icon={<HomeOutlined/>}>
-                        <Link to = "/"> 模块1 </Link>
+                    <MenuItem key = "/1" icon={<HomeOutlined/>}>
+                        <Link to = "/1"> 模块1 </Link>
                     </MenuItem>
-                    <MenuItem key = "模块2" icon={<HomeOutlined/>}>
-                        <Link to = "/"> 模块2 </Link>
+                    <MenuItem key = "/2" icon={<HomeOutlined/>}>
+                        <Link to = "/ChatRoom"> 在线诊疗 </Link>
                     </MenuItem>
-                    <MenuItem key = "模块3" icon={<HomeOutlined/>}>
-                        <Link to = "/"> 模块3 </Link>
+                    <MenuItem key = "/bbs" icon={<HomeOutlined/>}>
+                        <Link to = "/"> 交流论坛 </Link>
                     </MenuItem>
-                    <MenuItem key = "模块4" icon={<HomeOutlined/>}>
-                        <Link to = "/"> 模块4 </Link>
+                    <MenuItem key = "/" icon={<HomeOutlined/>}>
+                        <Link to = "/"> 医疗资讯 </Link>
                     </MenuItem>
                 </Menu>
             </div>
