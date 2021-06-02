@@ -545,6 +545,13 @@
     
 }
 
+.PostBig {
+    margin-top: 50px;
+    margin-bottom: 50px;
+    font: Sans-serif;
+    font-size: 30px;
+    font-weight: bold;
+}
 
 
 
@@ -591,3 +598,9 @@
     .sidercolor{
         border: 1px solid #c4c7ce;
     }
+
+
+.BackButton {
+    margin-top: 20px;
+    margin-left: 20px;
+}

@@ -2,6 +2,7 @@ import im from '../config.js'
 import GoEasyIM from 'goeasy-im';
 import { Button, Input, Layout, Menu, Breadcrumb, Dropdown, message, Space } from 'antd'
 import React, { Component } from 'react'
+import { Link } from "react-router-dom"
 import TopBar from './TopBar.jsx'
 import Message from './Message'
 import moment from 'moment';
@@ -479,7 +480,9 @@ class ChatRoom extends Component {
                         <Toolbar
                         title="消息列表"
                         leftItems={[
-                          <ToolbarButton key="cog" icon="ion-ios-cog" />
+                          <Link to="/prescription">
+                          <ToolbarButton key="cog" icon="ion-ios-clipboard" />
+                          </Link>
                         ]}
                         rightItems={[
                           <Dropdown overlay={this.menu}>
@@ -509,7 +512,7 @@ class ChatRoom extends Component {
                                 </div>
                                 <div class='audio-upload'>
                                     <label for="audio-input">
-                                        <i className="toolbar-button ion-ios-microphone" />
+                                        <i className="toolbar-button ion-ios-call" />
                                     </label>
                                     <input id="audio-input" type="file" onChange={this.onAudioChange} />
                                 </div>

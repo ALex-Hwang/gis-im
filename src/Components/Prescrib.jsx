@@ -479,7 +479,7 @@ class Prescription extends Component {
 
 						{/* <TopBar/> */}
 
-						<div style={{ marginLeft: '10%', marginRight: '10%' }}>
+						<div style={{ marginLeft: '10%', marginRight: '10%'}}>
 							<div>
 								<h1 className='PostBig'>开具处方</h1>
 							</div>
@@ -491,6 +491,9 @@ class Prescription extends Component {
 							{/* 处方内容 */}
 							<div class="prescribbox">
 								<div class="presentbox">
+									<div class="BackButton" style={{float: "left"}}>
+										<Button type="primary" href="/ChatRoom" >返回</Button>
+									</div>
 									<h1 class="prescribetitle">处方笺</h1>
 									<div class="basicbox1">
 										<div class="labeltext">
@@ -682,7 +685,7 @@ class Prescription extends Component {
 
 									<div class="basicbox2">
 
-										<TextArea rows={4} className="describe" />
+										<TextArea rows={4} className="describe" style={{left: 0}}/>
 
 
 
@@ -699,6 +702,7 @@ class Prescription extends Component {
 													type="primary"
 													style={{
 														marginBottom: 16,
+														left: 300
 													}}
 												>
 													Add
@@ -715,7 +719,7 @@ class Prescription extends Component {
 											</div>
 
 										</Content>
-										<Button type="primary" danger  style={{ top: 15, left: 650 }} >确认提交</Button>
+										<Button type="primary" danger  style={{ top: 15, left: 300 }} >确认提交</Button>
 
 
 
